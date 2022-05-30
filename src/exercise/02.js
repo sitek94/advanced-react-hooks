@@ -29,7 +29,7 @@ function asyncReducer(state, action) {
   }
 }
 
-function useAsync(asyncCallback, initialState, dependencies) {
+function useAsync(asyncCallback, initialState) {
   const [state, dispatch] = React.useReducer(asyncReducer, {
     status: 'idle',
     data: null,
@@ -58,26 +58,22 @@ function useAsync(asyncCallback, initialState, dependencies) {
           error,
         })
       })
-
-    // the react-hooks/exhaustive-deps rule. We'll fix this in an extra credit.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, dependencies)
+  }, [asyncCallback])
 
   return state
 }
 
 function PokemonInfo({pokemonName}) {
-  const state = useAsync(
-    () => {
-      if (!pokemonName) {
-        return
-      }
-      return fetchPokemon(pokemonName)
-    },
-    {status: pokemonName ? 'pending' : 'idle'},
-    [pokemonName],
-  )
-  // 🐨 this will change from "pokemon" to "data"
+  const asyncCallback = React.useCallback(() => {
+    if (!pokemonName) {
+      return
+    }
+    return fetchPokemon(pokemonName)
+  }, [pokemonName])
+
+  const state = useAsync(asyncCallback, {
+    status: pokemonName ? 'pending' : 'idle',
+  })
   const {data: pokemon, status, error} = state
 
   switch (status) {
